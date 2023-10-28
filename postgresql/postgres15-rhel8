@@ -12,3 +12,15 @@ ENV CUSTOM_SQL_SCRIPT="COMMENT ON ROLE \"$POSTGRESQL_USER\" IS '$POSTGRESQL_USER
 EXPOSE 5432
 
 COPY postgres15-rhel8-script.sh /usr/share/container-scripts/postgresql/start/
+
+
+
+# To pull images from registry.redhat.io - Login with the below credentials
+
+
+
+# Logging in to docker and redhat registry can be done same time. 
+
+
+# docker login docker.io
+# docker build -t sharon0706/postgres15-rhel8 -f ./postgres15-rhel8 .

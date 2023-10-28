@@ -1,0 +1,62 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  annotations:
+    openshift.io/display-name: PostgreSQL15-Custom
+  name: postgres15-rhel8-custom
+  namespace: testing-workspace
+  labels:
+    openshift.io/customimage: 'true'
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: 'latest'
+      annotations:
+        description: >-
+          Provides a PostgreSQL 15 database on RHEL 8.
+          This is a custom image, For reference see this git repo
+          https://github.com/mugicoder13/docker_custom_image_builds.git
+        iconClass: icon-postgresql
+        openshift.io/display-name: PostgreSQL custom 15
+        openshift.io/provider-display-name: 'Red Hat, Inc.'
+        tags: 'database,postgresql,hidden'
+        version: '15'
+      from:
+        kind: DockerImage
+        name: 'docker.io/mugicoder13/postgres15-rhel8:latest'
+      generation: 2
+      importPolicy:
+        importMode: Legacy
+      referencePolicy:
+        type: Local
+
+
+--- 
+
+
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: postgres15-rhel8-custom
+  namespace: testing-workspace
+  labels:
+    name: postgres15-rhel8-custom
+spec:
+  triggers:
+    - type: ConfigChange
+  source:
+    contextDir: "postgresql"
+    type: Git
+    git:
+      uri: 'https://github.com/mugicoder13/docker_custom_image_builds.git'  # change the repo
+    sourceSecret:
+      name: mukesh-git-creds
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: "postgres15-rhel8"
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'postgres15-rhel8-custom:latest'

@@ -1,0 +1,157 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: dev-postgres
+  namespace: test-workspace
+data:
+  database-name: b2JzZXJ2YWJpbGl0eS1kZW1vLXRhYmxlcwo=
+  database-password: b2JzZXJ2YWJpbGl0eTEyMwo=
+  database-user: b2JzZXJ2YWJpbGl0eS1kZW1vLXVzZXIK
+type: Opaque
+
+---
+
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: dev-postgres
+  namespace: test-workspace
+spec:
+  strategy:
+    type: Recreate
+    recreateParams:
+      timeoutSeconds: 600
+    resources: {}
+    activeDeadlineSeconds: 21600
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - postgresql
+        from:
+          kind: ImageStreamTag
+          namespace: postgresql-workspace
+          name: 'postgresql-15:latest'
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    name: dev-postgres
+  template:
+    metadata:
+      labels:
+        name: dev-postgres
+    spec:
+      volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: dev-postgres
+      containers:
+        - resources:
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: postgresql
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - '--live'
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dev-postgres
+                  key: database-user
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-postgres
+                  key: database-password
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: dev-postgres
+                  key: database-name
+          securityContext:
+            capabilities: {}
+            privileged: false
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/pgsql/data
+          terminationMessagePolicy: File
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/postgresql-15:latest
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dev-postgres
+    name: dev-postgres
+  name: dev-postgres
+  namespace: test-workspace
+spec:
+  ports:
+  - name: 5432-tcp
+    port: 5432
+    protocol: TCP
+  selector:
+    name: dev-postgres
+
+--- 
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: dev-postgres
+  namespace: test-workspace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: lvms-vg1
+  volumeMode: Filesystem
+status:
+  phase: Bound
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+
+
+
+
+    # dev-postgres.test-workspace.svc.cluster.local
+
+    # dev-postgres-primary.postgresql-workspace.svc
