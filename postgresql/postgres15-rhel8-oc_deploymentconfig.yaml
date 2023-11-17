@@ -2,7 +2,7 @@ kind: Secret
 apiVersion: v1
 metadata:
   name: dev-postgres
-  namespace: test-workspace
+  namespace: testing-workspace
 data:
   database-name: b2JzZXJ2YWJpbGl0eS1kZW1vLXRhYmxlcwo=
   database-password: b2JzZXJ2YWJpbGl0eTEyMwo=
@@ -15,7 +15,7 @@ kind: DeploymentConfig
 apiVersion: apps.openshift.io/v1
 metadata:
   name: dev-postgres
-  namespace: test-workspace
+  namespace: testing-workspace
 spec:
   strategy:
     type: Recreate
@@ -31,8 +31,8 @@ spec:
           - postgresql
         from:
           kind: ImageStreamTag
-          namespace: postgresql-workspace
-          name: 'postgresql-15:latest'
+          namespace: testing-workspace
+          name: 'postgres15-rhel8-custom:latest'
     - type: ConfigChange
   replicas: 1
   revisionHistoryLimit: 10
@@ -101,7 +101,7 @@ spec:
               mountPath: /var/lib/pgsql/data
           terminationMessagePolicy: File
           image: >-
-            image-registry.openshift-image-registry.svc:5000/postgresql-15:latest
+            image-registry.openshift-image-registry.svc:5000/postgres15-rhel8-custom:latest
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
@@ -118,7 +118,7 @@ metadata:
     app: dev-postgres
     name: dev-postgres
   name: dev-postgres
-  namespace: test-workspace
+  namespace: testing-workspace
 spec:
   ports:
   - name: 5432-tcp
@@ -133,7 +133,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: dev-postgres
-  namespace: test-workspace
+  namespace: testing-workspace
 spec:
   accessModes:
     - ReadWriteOnce
@@ -148,10 +148,3 @@ status:
     - ReadWriteOnce
   capacity:
     storage: 1Gi
-
-
-
-
-    # dev-postgres.test-workspace.svc.cluster.local
-
-    # dev-postgres-primary.postgresql-workspace.svc

@@ -1,0 +1,1 @@
+FROM registry.redhat.io/amq-streams/kafka-34-rhel8

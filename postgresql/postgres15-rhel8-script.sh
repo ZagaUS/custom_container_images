@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+echo $POSTGRESQL_DATABASE
+
 if [ -n "$CUSTOM_SQL_SCRIPT" ]; then
     psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "$POSTGRESQL_DATABASE" <<<"$CUSTOM_SQL_SCRIPT"
 else
