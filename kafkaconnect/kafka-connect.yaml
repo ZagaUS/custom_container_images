@@ -1,0 +1,27 @@
+kind: KafkaConnect
+apiVersion: kafka.strimzi.io/v1beta2
+metadata:
+  name: observai-connect-cluster
+  namespace: observability-kafka
+spec:
+  version: 3.4.0
+  replicas: 3
+  bootstrapServers: 'observai-kafka-bootstrap.observability-kafka.svc.cluster.local:9092'
+  image: quay.io/zagaos/kafka-connect
+    replicas: 3
+  template:
+    pod:
+      imagePullSecrets:
+        - name: sharanya-zaga-pull-secret
+  config:
+    group.id: connect-cluster-dev
+    offset.storage.topic: connect-cluster-dev-offsets
+    config.storage.topic: connect-cluster-dev-configs
+    status.storage.topic: connect-cluster-dev-status
+    config.storage.replication.factor: -1
+    offset.storage.replication.factor: -1
+    status.storage.replication.factor: -1
+
+
+
+
