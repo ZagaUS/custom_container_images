@@ -1,0 +1,55 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: postgres15-rhel9
+  namespace: test-space
+  labels:
+    app: postgres15-rhel9
+    app.kubernetes.io/component: postgres15-rhel9
+    app.kubernetes.io/instance: postgres15-rhel9
+    app.kubernetes.io/name: postgres15-rhel9
+    app.kubernetes.io/part-of: postgres15-rhel9-app
+    app.openshift.io/runtime-namespace: test-space
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres15-rhel9
+  template:
+    metadata:
+      labels:
+        app: postgres15-rhel9
+        deployment: postgres15-rhel9
+    spec:
+      imagePullSecrets:
+        - name: sharanya-zaga-pull-secret
+      containers:
+        - name: postgres15-rhel9
+          image: >-
+            quay.io/zagaos/zaga-postgres15-rhel9
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          env:
+            - name: USERS
+              value: "user6,user5,user4"
+            - name: PASSWORDS
+              value: "user6,user5,user4"
+            - name: DATABASES
+              value: "db1,db2,db3"
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
