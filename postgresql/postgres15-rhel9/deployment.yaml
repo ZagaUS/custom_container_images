@@ -1,8 +1,30 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: zaga-postgres
+  namespace: observability-datamesh
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: ocs-storagecluster-cephfs
+  volumeMode: Filesystem
+status:
+  phase: Bound
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 3Gi
+
+---
+
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: postgres15-rhel9
-  namespace: test-space
+  name: zaga-postgres
+  namespace: observability-datamesh
   labels:
     app: postgres15-rhel9
     app.kubernetes.io/component: postgres15-rhel9
@@ -32,16 +54,23 @@ spec:
               protocol: TCP
           env:
             - name: USERS
-              value: "user6,user5,user4"
+              value: "superset"
             - name: PASSWORDS
-              value: "user6,user5,user4"
+              value: "superset123"
             - name: DATABASES
-              value: "db1,db2,db3"
+              value: "supersetdb"
+          volumeMounts:
+            - name: zaga-postgres-vol
+              mountPath: /var/lib/pgsql/data
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           imagePullPolicy: Always
       restartPolicy: Always
+      volumes:
+      - name: zaga-postgres-vol
+        persistentVolumeClaim:
+          claimName: zaga-postgres
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
       securityContext: {}
